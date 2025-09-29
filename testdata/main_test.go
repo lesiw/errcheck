@@ -73,7 +73,7 @@ func TestFunc(tt *testing.T) {
 
 	// Goroutine
 	go a()    // UNCHECKED
-	defer a() // UNCHECKED
+	defer a() // defer statements that are not func literals are ignored
 
 	b1 := bytes.Buffer{}
 	b2 := &bytes.Buffer{}

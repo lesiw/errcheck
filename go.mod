@@ -1,4 +1,4 @@
-module github.com/kisielk/errcheck
+module lesiw.io/errcheck
 
 go 1.22.0
 

@@ -1,4 +1,18 @@
-# errcheck
+# lesiw.io/errcheck
+
+**This is a fork of
+[github.com/kisielk/errcheck](https://github.com/kisielk/errcheck) with a
+modification to ignore errors from defer statements that are not function
+literals.**
+
+The key difference from the upstream version is that defer statements like
+`defer file.Close()` will not trigger errcheck warnings, as these defers are
+often handled on a best-effort basis. However, errors within defer function
+literals (e.g., `defer func() { file.Close() }()`) are still checked.
+
+The original README follows.
+
+---
 
 errcheck finds silently ignored errors in Go code.
 

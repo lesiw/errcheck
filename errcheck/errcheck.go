@@ -514,6 +514,12 @@ func (v *visitor) isRecover(call *ast.CallExpr) bool {
 	return false
 }
 
+// isDeferFuncLiteral returns true if the defer statement contains a function literal
+func (v *visitor) isDeferFuncLiteral(stmt *ast.DeferStmt) bool {
+	_, ok := stmt.Call.Fun.(*ast.FuncLit)
+	return ok
+}
+
 // TODO (dtcaciuc) collect token.Pos and then convert them to UncheckedErrors
 // after visitor is done running. This will allow to integrate more cleanly
 // with analyzer so that we don't have to convert Position back to Pos.
@@ -568,6 +574,12 @@ func (v *visitor) Visit(node ast.Node) ast.Visitor {
 			v.addErrorAtPosition(stmt.Call.Lparen, stmt.Call)
 		}
 	case *ast.DeferStmt:
+		// Ignore errors from defer statements that are not function literals
+		// as these are often handled on a best-effort basis
+		if !v.isDeferFuncLiteral(stmt) {
+			// Skip error checking for non-function-literal defer statements
+			return v
+		}
 		if !v.ignoreCall(stmt.Call) && v.callReturnsError(stmt.Call) {
 			v.addErrorAtPosition(stmt.Call.Lparen, stmt.Call)
 		}

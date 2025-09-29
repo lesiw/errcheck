@@ -31,7 +31,7 @@ func rec() {
 		recover()     // want "unchecked error"
 		_ = recover() // ok, assigned to blank
 	}()
-	defer recover() // want "unchecked error"
+	defer recover() // defer statements that are not func literals are ignored
 }
 
 type MyError string
@@ -152,7 +152,7 @@ func main() {
 
 	// Goroutine
 	go a()    // want "unchecked error"
-	defer a() // want "unchecked error"
+	defer a() // defer statements that are not func literals are ignored
 
 	// IO errors excluded by default
 	b1 := bytes.Buffer{}

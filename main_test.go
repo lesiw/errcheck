@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kisielk/errcheck/errcheck"
+	"lesiw.io/errcheck/errcheck"
 )
 
 var dotStar = regexp.MustCompile(".*")
@@ -42,7 +42,7 @@ func TestMainFunc(t *testing.T) {
 		bufChannel <- buf.String()
 	}()
 
-	exitCode := mainCmd([]string{"cmd name", "github.com/kisielk/errcheck/testdata"})
+	exitCode := mainCmd([]string{"cmd name", "lesiw.io/errcheck/testdata"})
 
 	w.Close()
 
@@ -56,7 +56,7 @@ func TestMainFunc(t *testing.T) {
 		t.Errorf("Exit code is %d, expected %d", exitCode, exitUncheckedError)
 	}
 
-	expectUnchecked := 29
+	expectUnchecked := 26 // 3 fewer because defer statements that are not func literals are now ignored
 	if got := strings.Count(out, "UNCHECKED"); got != expectUnchecked {
 		t.Errorf("Got %d UNCHECKED errors, expected %d in:\n%s", got, expectUnchecked, out)
 	}

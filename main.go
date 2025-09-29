@@ -10,7 +10,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/kisielk/errcheck/errcheck"
+	"lesiw.io/errcheck/errcheck"
 	"golang.org/x/tools/go/packages"
 )
 
