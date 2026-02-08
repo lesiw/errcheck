@@ -58,7 +58,7 @@ func TestFunc(tt *testing.T) {
 	_ = z + w // Avoid complaints about unused variables
 
 	// Type assertions
-	var i interface{}
+	var i any
 	s1 := i.(string)    // ASSERT
 	s1 = i.(string)     // ASSERT
 	s2, _ := i.(string) // ASSERT

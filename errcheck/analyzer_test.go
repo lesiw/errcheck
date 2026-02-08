@@ -18,22 +18,28 @@ func TestAnalyzer(t *testing.T) {
 			t.Setenv("GODEBUG", tt)
 
 			t.Run("default flags", func(t *testing.T) {
-				packageDir := filepath.Join(analysistest.TestData(), "src/a/")
-				_ = analysistest.Run(t, packageDir, Analyzer)
+				dir := filepath.Join(
+					analysistest.TestData(), "src/a/",
+				)
+				_ = analysistest.Run(t, dir, Analyzer)
 			})
 
 			t.Run("check blanks", func(t *testing.T) {
-				packageDir := filepath.Join(analysistest.TestData(), "src/blank/")
+				dir := filepath.Join(
+					analysistest.TestData(), "src/blank/",
+				)
 				_ = Analyzer.Flags.Set("blank", "true")
-				_ = analysistest.Run(t, packageDir, Analyzer)
-				_ = Analyzer.Flags.Set("blank", "false") // reset it
+				_ = analysistest.Run(t, dir, Analyzer)
+				_ = Analyzer.Flags.Set("blank", "false")
 			})
 
 			t.Run("check asserts", func(t *testing.T) {
-				packageDir := filepath.Join(analysistest.TestData(), "src/assert/")
+				dir := filepath.Join(
+					analysistest.TestData(), "src/assert/",
+				)
 				_ = Analyzer.Flags.Set("assert", "true")
-				_ = analysistest.Run(t, packageDir, Analyzer)
-				_ = Analyzer.Flags.Set("assert", "false") // reset it
+				_ = analysistest.Run(t, dir, Analyzer)
+				_ = Analyzer.Flags.Set("assert", "false")
 			})
 		})
 	}

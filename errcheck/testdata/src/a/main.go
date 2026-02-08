@@ -113,7 +113,7 @@ func main() {
 	x3 := &embedtalias{}
 	_ = x3.a() // ok, assigned to blank
 	x3.a()     // want "unchecked error"
-	
+
 	var x4 embedtptralias
 	_ = x4.a() // ok, assigned to blank
 	x4.a()     // want "unchecked error"
@@ -137,7 +137,7 @@ func main() {
 	_ = z + w // Avoid complaints about unused variables
 
 	// Type assertions
-	var i interface{}
+	var i any
 	s1 := i.(string)    // ok, would fail with -assert
 	s1 = i.(string)     // ok, would fail with -assert
 	s2, _ := i.(string) // ok, would fail with -blank

@@ -10,8 +10,9 @@ import (
 	"strings"
 	"sync"
 
-	"lesiw.io/errcheck/errcheck"
 	"golang.org/x/tools/go/packages"
+
+	"lesiw.io/errcheck/errcheck"
 )
 
 const (
@@ -37,14 +38,16 @@ func (f ignoreFlag) String() string {
 		}
 		pairs = append(pairs, prefix+re.String())
 	}
-	return fmt.Sprintf("%q", strings.Join(pairs, ","))
+	return fmt.Sprintf(
+		"%q", strings.Join(pairs, ","),
+	)
 }
 
 func (f ignoreFlag) Set(s string) error {
 	if s == "" {
 		return nil
 	}
-	for _, pair := range strings.Split(s, ",") {
+	for pair := range strings.SplitSeq(s, ",") {
 		colonIndex := strings.Index(pair, ":")
 		var pkg, re string
 		if colonIndex == -1 {
@@ -66,7 +69,9 @@ func (f ignoreFlag) Set(s string) error {
 type tagsFlag []string
 
 func (f *tagsFlag) String() string {
-	return fmt.Sprintf("%q", strings.Join(*f, ","))
+	return fmt.Sprintf(
+		"%q", strings.Join(*f, ","),
+	)
 }
 
 func (f *tagsFlag) Set(s string) error {
@@ -99,14 +104,22 @@ func reportResult(e errcheck.Result) {
 		}
 
 		if verbose && uncheckedError.FuncName != "" {
-			fmt.Printf("%s:\t%s\t%s\n", pos, uncheckedError.FuncName, uncheckedError.Line)
+			fmt.Printf(
+				"%s:\t%s\t%s\n",
+				pos,
+				uncheckedError.FuncName,
+				uncheckedError.Line,
+			)
 		} else {
-			fmt.Printf("%s:\t%s\n", pos, uncheckedError.Line)
+			fmt.Printf(
+				"%s:\t%s\n",
+				pos, uncheckedError.Line,
+			)
 		}
 	}
 }
 
-func logf(msg string, args ...interface{}) {
+func logf(msg string, args ...any) {
 	if verbose {
 		fmt.Fprintf(os.Stderr, msg+"\n", args...)
 	}
@@ -121,7 +134,11 @@ func mainCmd(args []string) int {
 
 	result, err := checkPaths(&checker, paths...)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: failed to check packages: %s\n", err)
+		fmt.Fprintf(
+			os.Stderr,
+			"error: failed to check packages: %s\n",
+			err,
+		)
 		return exitFatalError
 	}
 	if len(result.UncheckedErrors) > 0 {
@@ -131,7 +148,9 @@ func mainCmd(args []string) int {
 	return exitCodeOk
 }
 
-func checkPaths(c *errcheck.Checker, paths ...string) (errcheck.Result, error) {
+func checkPaths(
+	c *errcheck.Checker, paths ...string,
+) (errcheck.Result, error) {
 	pkgs, err := c.LoadPackages(paths...)
 	if err != nil {
 		return errcheck.Result{}, err
@@ -140,7 +159,11 @@ func checkPaths(c *errcheck.Checker, paths ...string) (errcheck.Result, error) {
 	work := make(chan *packages.Package, len(pkgs))
 	for _, pkg := range pkgs {
 		if len(pkg.Errors) > 0 {
-			return errcheck.Result{}, fmt.Errorf("errors while loading package %s: %v", pkg.ID, pkg.Errors)
+			return errcheck.Result{},
+				fmt.Errorf(
+					"errors while loading package %s: %v",
+					pkg.ID, pkg.Errors,
+				)
 		}
 		work <- pkg
 	}
@@ -149,13 +172,16 @@ func checkPaths(c *errcheck.Checker, paths ...string) (errcheck.Result, error) {
 	var wg sync.WaitGroup
 	result := &errcheck.Result{}
 	mu := &sync.Mutex{}
-	for i := 0; i < runtime.NumCPU(); i++ {
+	for range runtime.NumCPU() {
 		wg.Add(1)
 
 		go func() {
 			defer wg.Done()
 			for pkg := range work {
-				logf("checking %s", pkg.Types.Path())
+				logf(
+					"checking %s",
+					pkg.Types.Path(),
+				)
 				r := c.CheckPackage(pkg)
 				mu.Lock()
 				result.Append(r)
@@ -168,33 +194,86 @@ func checkPaths(c *errcheck.Checker, paths ...string) (errcheck.Result, error) {
 	return result.Unique(), nil
 }
 
-func parseFlags(checker *errcheck.Checker, args []string) ([]string, int) {
-	flags := flag.NewFlagSet(args[0], flag.ContinueOnError)
+func parseFlags(
+	checker *errcheck.Checker, args []string,
+) ([]string, int) {
+	flags := flag.NewFlagSet(
+		args[0], flag.ContinueOnError,
+	)
 
 	var checkAsserts, checkBlanks bool
 
-	flags.BoolVar(&checkBlanks, "blank", false, "if true, check for errors assigned to blank identifier")
-	flags.BoolVar(&checkAsserts, "asserts", false, "if true, check for ignored type assertion results")
-	flags.BoolVar(&checker.Exclusions.TestFiles, "ignoretests", false, "if true, checking of _test.go files is disabled")
-	flags.BoolVar(&checker.Exclusions.GeneratedFiles, "ignoregenerated", false, "if true, checking of files with generated code is disabled")
-	flags.BoolVar(&verbose, "verbose", false, "produce more verbose logging")
+	flags.BoolVar(
+		&checkBlanks, "blank", false,
+		"if true, check for errors assigned "+
+			"to blank identifier",
+	)
+	flags.BoolVar(
+		&checkAsserts, "asserts", false,
+		"if true, check for ignored type "+
+			"assertion results",
+	)
+	flags.BoolVar(
+		&checker.Exclusions.TestFiles,
+		"ignoretests", false,
+		"if true, checking of _test.go files "+
+			"is disabled",
+	)
+	flags.BoolVar(
+		&checker.Exclusions.GeneratedFiles,
+		"ignoregenerated", false,
+		"if true, checking of files with "+
+			"generated code is disabled",
+	)
+	flags.BoolVar(
+		&verbose, "verbose", false,
+		"produce more verbose logging",
+	)
 
-	flags.BoolVar(&abspath, "abspath", false, "print absolute paths to files")
+	flags.BoolVar(
+		&abspath, "abspath", false,
+		"print absolute paths to files",
+	)
 
 	tags := tagsFlag{}
-	flags.Var(&tags, "tags", "comma or space-separated list of build tags to include")
-	ignorePkg := flags.String("ignorepkg", "", "comma-separated list of package paths to ignore")
+	flags.Var(
+		&tags, "tags",
+		"comma or space-separated list of "+
+			"build tags to include",
+	)
+	ignorePkg := flags.String(
+		"ignorepkg", "",
+		"comma-separated list of package "+
+			"paths to ignore",
+	)
 	ignore := ignoreFlag(map[string]*regexp.Regexp{})
-	flags.Var(ignore, "ignore", "[deprecated] comma-separated list of pairs of the form pkg:regex\n"+
-		"            the regex is used to ignore names within pkg.")
+	flags.Var(
+		ignore, "ignore",
+		"[deprecated] comma-separated list of "+
+			"pairs of the form pkg:regex\n"+
+			"            the regex is used to "+
+			"ignore names within pkg.",
+	)
 
 	var excludeFile string
-	flags.StringVar(&excludeFile, "exclude", "", "Path to a file containing a list of functions to exclude from checking")
+	flags.StringVar(
+		&excludeFile, "exclude", "",
+		"Path to a file containing a list of "+
+			"functions to exclude from checking",
+	)
 
 	var excludeOnly bool
-	flags.BoolVar(&excludeOnly, "excludeonly", false, "Use only excludes from -exclude file")
+	flags.BoolVar(
+		&excludeOnly, "excludeonly", false,
+		"Use only excludes from -exclude file",
+	)
 
-	flags.StringVar(&checker.Mod, "mod", "", "module download mode to use: readonly or vendor. See 'go help modules' for more.")
+	flags.StringVar(
+		&checker.Mod, "mod", "",
+		"module download mode to use: readonly "+
+			"or vendor. See 'go help modules' "+
+			"for more.",
+	)
 
 	if err := flags.Parse(args[1:]); err != nil {
 		return nil, exitFatalError
@@ -204,22 +283,36 @@ func parseFlags(checker *errcheck.Checker, args []string) ([]string, int) {
 	checker.Exclusions.TypeAssertions = !checkAsserts
 
 	if !excludeOnly {
-		checker.Exclusions.Symbols = append(checker.Exclusions.Symbols, errcheck.DefaultExcludedSymbols...)
+		checker.Exclusions.Symbols = append(
+			checker.Exclusions.Symbols,
+			errcheck.DefaultExcludedSymbols...,
+		)
 	}
 
 	if excludeFile != "" {
-		excludes, err := errcheck.ReadExcludes(excludeFile)
+		excludes, err :=
+			errcheck.ReadExcludes(excludeFile)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Could not read exclude file: %v\n", err)
+			fmt.Fprintf(
+				os.Stderr,
+				"Could not read exclude file: %v\n",
+				err,
+			)
 			return nil, exitFatalError
 		}
-		checker.Exclusions.Symbols = append(checker.Exclusions.Symbols, excludes...)
+		checker.Exclusions.Symbols = append(
+			checker.Exclusions.Symbols, excludes...,
+		)
 	}
 
 	checker.Tags = tags
-	for _, pkg := range strings.Split(*ignorePkg, ",") {
+	for pkg := range strings.SplitSeq(
+		*ignorePkg, ",",
+	) {
 		if pkg != "" {
-			checker.Exclusions.Packages = append(checker.Exclusions.Packages, pkg)
+			checker.Exclusions.Packages = append(
+				checker.Exclusions.Packages, pkg,
+			)
 		}
 	}
 

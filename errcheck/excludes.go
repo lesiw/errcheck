@@ -7,9 +7,11 @@ import (
 	"strings"
 )
 
-// DefaultExcludedSymbols is a list of symbol names that are usually excluded from checks by default.
+// DefaultExcludedSymbols is a list of symbol names that
+// are usually excluded from checks by default.
 //
-// Note, that they still need to be explicitly copied to Checker.Exclusions.Symbols
+// Note, that they still need to be explicitly copied to
+// Checker.Exclusions.Symbols
 var DefaultExcludedSymbols = []string{
 	// bytes
 	"(*bytes.Buffer).Write",
@@ -18,7 +20,7 @@ var DefaultExcludedSymbols = []string{
 	"(*bytes.Buffer).WriteString",
 
 	// crypto
-	"crypto/rand.Read", // https://github.com/golang/go/issues/66821
+	"crypto/rand.Read",
 
 	// fmt
 	"fmt.Print",
@@ -57,10 +59,12 @@ var DefaultExcludedSymbols = []string{
 	"(*hash/maphash.Hash).WriteString",
 }
 
-// ReadExcludes reads an excludes file, a newline delimited file that lists
-// patterns for which to allow unchecked errors.
+// ReadExcludes reads an excludes file, a newline delimited
+// file that lists patterns for which to allow unchecked
+// errors.
 //
-// Lines that start with two forward slashes are considered comments and are ignored.
+// Lines that start with two forward slashes are considered
+// comments and are ignored.
 func ReadExcludes(path string) ([]string, error) {
 	var excludes []string
 

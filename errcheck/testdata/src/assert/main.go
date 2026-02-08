@@ -1,7 +1,7 @@
 package assert
 
 func main() {
-	var i interface{}
+	var i any
 	_ = i.(string) // want "unchecked error"
 
 	handleInterface(i.(string)) // want "unchecked error"
@@ -18,6 +18,6 @@ func main() {
 	}
 }
 
-func handleInterface(i interface{}) string {
+func handleInterface(i any) string {
 	return i.(string) // want "unchecked error"
 }

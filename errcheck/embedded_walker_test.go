@@ -38,23 +38,47 @@ func TestWalkThroughEmbeddedInterfaces(t *testing.T) {
 		{"Inner{}.Method", false, nil},
 		{"(&Inner{}).Method", false, nil},
 		{"Outer{}.Method", false, nil},
-		{"InnerInterface.Method", true, []string{"test.InnerInterface"}},
-		{"OuterInterface.Method", true, []string{"test.OuterInterface", "test.InnerInterface"}},
-		{"OuterInterfaceStruct.Method", true, []string{"test.OuterInterface", "test.InnerInterface"}},
+		{
+			"InnerInterface.Method",
+			true,
+			[]string{"test.InnerInterface"},
+		},
+		{
+			"OuterInterface.Method",
+			true,
+			[]string{
+				"test.OuterInterface",
+				"test.InnerInterface",
+			},
+		},
+		{
+			"OuterInterfaceStruct.Method",
+			true,
+			[]string{
+				"test.OuterInterface",
+				"test.InnerInterface",
+			},
+		},
 	}
 
 	for _, c := range cases {
 		fset := token.NewFileSet()
-		f, err := parser.ParseFile(fset, "test", commonSrc+c.selector, 0)
+		f, err := parser.ParseFile(
+			fset, "test", commonSrc+c.selector, 0,
+		)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		conf := types.Config{}
 		info := types.Info{
-			Selections: make(map[*ast.SelectorExpr]*types.Selection),
+			Selections: make(
+				map[*ast.SelectorExpr]*types.Selection,
+			),
 		}
-		_, err = conf.Check("test", fset, []*ast.File{f}, &info)
+		_, err = conf.Check(
+			"test", fset, []*ast.File{f}, &info,
+		)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -65,9 +89,13 @@ func TestWalkThroughEmbeddedInterfaces(t *testing.T) {
 				if !ok {
 					t.Fatalf("no Selection!")
 				}
-				ts, ok := walkThroughEmbeddedInterfaces(selection)
+				ts, ok :=
+					walkThroughEmbeddedInterfaces(selection)
 				if ok != c.expectedOk {
-					t.Errorf("expected ok %v got %v", c.expectedOk, ok)
+					t.Errorf(
+						"expected ok %v got %v",
+						c.expectedOk, ok,
+					)
 					return false
 				}
 				if !ok {
@@ -75,19 +103,24 @@ func TestWalkThroughEmbeddedInterfaces(t *testing.T) {
 				}
 
 				if len(ts) != len(c.expected) {
-					t.Fatalf("expected %d types, got %d", len(c.expected), len(ts))
+					t.Fatalf(
+						"expected %d types, got %d",
+						len(c.expected), len(ts),
+					)
 				}
 
 				for i, e := range c.expected {
 					if e != ts[i].String() {
-						t.Errorf("mismatch at index %d: expected %s got %s", i, e, ts[i])
+						t.Errorf(
+							"mismatch at index %d: "+
+								"expected %s got %s",
+							i, e, ts[i],
+						)
 					}
 				}
 			}
 
 			return true
 		})
-
 	}
-
 }

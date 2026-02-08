@@ -1,4 +1,5 @@
-// Package errcheck is the library used to implement the errcheck command-line tool.
+// Package errcheck is the library used to implement
+// the errcheck command-line tool.
 package errcheck
 
 import (
@@ -19,17 +20,23 @@ import (
 var errorType *types.Interface
 
 func init() {
-	errorType = types.Universe.Lookup("error").Type().Underlying().(*types.Interface)
+	errorType = types.Universe.Lookup("error").
+		Type().Underlying().(*types.Interface)
 }
 
 var (
-	// ErrNoGoFiles is returned when CheckPackage is run on a package with no Go source files.
+	// ErrNoGoFiles is returned when CheckPackage is
+	// run on a package with no Go source files.
 	//
-	// Deprecated: this error is no longer returned by errcheck.LoadPackages.
-	ErrNoGoFiles = errors.New("package contains no go source files")
+	// Deprecated: this error is no longer returned by
+	// errcheck.LoadPackages.
+	ErrNoGoFiles = errors.New(
+		"package contains no go source files",
+	)
 )
 
-// UncheckedError indicates the position of an unchecked error return.
+// UncheckedError indicates the position of an
+// unchecked error return.
 type UncheckedError struct {
 	Pos          token.Position
 	Line         string
@@ -37,20 +44,25 @@ type UncheckedError struct {
 	SelectorName string
 }
 
-// Result is returned from the CheckPackage function, and holds all the errors
-// that were found to be unchecked in a package.
+// Result is returned from the CheckPackage function,
+// and holds all the errors that were found to be
+// unchecked in a package.
 //
-// Aggregation can be done using the Append method for users that want to
-// combine results from multiple packages.
+// Aggregation can be done using the Append method for
+// users that want to combine results from multiple
+// packages.
 type Result struct {
-	// UncheckedErrors is a list of all the unchecked errors in the package.
-	// Printing an error reports its position within the file and the contents of the line.
+	// UncheckedErrors is a list of all the unchecked
+	// errors in the package. Printing an error reports
+	// its position within the file and the contents
+	// of the line.
 	UncheckedErrors []UncheckedError
 }
 
 type byName []UncheckedError
 
-// Less reports whether the element with index i should sort before the element with index j.
+// Less reports whether the element with index i should
+// sort before the element with index j.
 func (b byName) Less(i, j int) bool {
 	ei, ej := b[i], b[j]
 
@@ -77,17 +89,24 @@ func (b byName) Len() int {
 	return len(b)
 }
 
-// Append appends errors to e. Append does not do any duplicate checking.
+// Append appends errors to e. Append does not do any
+// duplicate checking.
 func (r *Result) Append(other Result) {
-	r.UncheckedErrors = append(r.UncheckedErrors, other.UncheckedErrors...)
+	r.UncheckedErrors = append(
+		r.UncheckedErrors, other.UncheckedErrors...,
+	)
 }
 
-// Unique returns the unique errors that have been accumulated. Duplicates may occur
-// when a file containing an unchecked error belongs to > 1 package.
+// Unique returns the unique errors that have been
+// accumulated. Duplicates may occur when a file
+// containing an unchecked error belongs to > 1 package.
 //
-// The method receiver remains unmodified after the call to Unique.
+// The method receiver remains unmodified after the
+// call to Unique.
 func (r Result) Unique() Result {
-	result := make([]UncheckedError, len(r.UncheckedErrors))
+	result := make(
+		[]UncheckedError, len(r.UncheckedErrors),
+	)
 	copy(result, r.UncheckedErrors)
 	sort.Sort((byName)(result))
 	uniq := result[:0] // compact in-place
@@ -99,29 +118,32 @@ func (r Result) Unique() Result {
 	return Result{UncheckedErrors: uniq}
 }
 
-// Exclusions define symbols and language elements that will be not checked
+// Exclusions define symbols and language elements that
+// will be not checked
 type Exclusions struct {
 
 	// Packages lists paths of excluded packages.
 	Packages []string
 
-	// SymbolRegexpsByPackage maps individual package paths to regular
-	// expressions that match symbols to be excluded.
+	// SymbolRegexpsByPackage maps individual package
+	// paths to regular expressions that match symbols
+	// to be excluded.
 	//
-	// Packages whose paths appear both here and in Packages list will
-	// be excluded entirely.
+	// Packages whose paths appear both here and in
+	// Packages list will be excluded entirely.
 	//
-	// This is a legacy input that will be deprecated in errcheck version 2 and
-	// should not be used.
+	// This is a legacy input that will be deprecated
+	// in errcheck version 2 and should not be used.
 	SymbolRegexpsByPackage map[string]*regexp.Regexp
 
-	// Symbols lists patterns that exclude individual package symbols.
+	// Symbols lists patterns that exclude individual
+	// package symbols.
 	//
 	// For example:
 	//
-	//   "fmt.Errorf"              // function
-	//   "fmt.Fprintf(os.Stderr)"  // function with set argument value
-	//   "(hash.Hash).Write"       // method
+	//   "fmt.Errorf"
+	//   "fmt.Fprintf(os.Stderr)"
+	//   "(hash.Hash).Write"
 	//
 	Symbols []string
 
@@ -130,14 +152,15 @@ type Exclusions struct {
 
 	// GeneratedFiles excludes generated source files.
 	//
-	// Source file is assumed to be generated if its contents
-	// match the following regular expression:
+	// Source file is assumed to be generated if its
+	// contents match the following regular expression:
 	//
 	//   ^// Code generated .* DO NOT EDIT\\.$
 	//
 	GeneratedFiles bool
 
-	// BlankAssignments ignores assignments to blank identifier.
+	// BlankAssignments ignores assignments to blank
+	// identifier.
 	BlankAssignments bool
 
 	// TypeAssertions ignores unchecked type assertions.
@@ -146,7 +169,8 @@ type Exclusions struct {
 
 // Checker checks that you checked errors.
 type Checker struct {
-	// Exclusions defines code packages, symbols, and other elements that will not be checked.
+	// Exclusions defines code packages, symbols, and
+	// other elements that will not be checked.
 	Exclusions Exclusions
 
 	// Tags are a list of build tags to use.
@@ -157,36 +181,56 @@ type Checker struct {
 }
 
 // loadPackages is used for testing.
-var loadPackages = func(cfg *packages.Config, paths ...string) ([]*packages.Package, error) {
+var loadPackages = func(
+	cfg *packages.Config, paths ...string,
+) ([]*packages.Package, error) {
 	return packages.Load(cfg, paths...)
 }
 
-// LoadPackages loads all the packages in all the paths provided. It uses the
-// exclusions and build tags provided to by the user when loading the packages.
-func (c *Checker) LoadPackages(paths ...string) ([]*packages.Package, error) {
-	buildFlags := []string{fmt.Sprintf("-tags=%s", strings.Join(c.Tags, ","))}
+// LoadPackages loads all the packages in all the paths
+// provided. It uses the exclusions and build tags
+// provided to by the user when loading the packages.
+func (c *Checker) LoadPackages(
+	paths ...string,
+) ([]*packages.Package, error) {
+	buildFlags := []string{
+		fmt.Sprintf(
+			"-tags=%s", strings.Join(c.Tags, ","),
+		),
+	}
 	if c.Mod != "" {
-		buildFlags = append(buildFlags, fmt.Sprintf("-mod=%s", c.Mod))
+		buildFlags = append(
+			buildFlags,
+			fmt.Sprintf("-mod=%s", c.Mod),
+		)
 	}
 	cfg := &packages.Config{
-		Mode:       packages.NeedSyntax | packages.NeedTypes | packages.NeedTypesInfo,
+		Mode: packages.NeedSyntax |
+			packages.NeedTypes |
+			packages.NeedTypesInfo,
 		Tests:      !c.Exclusions.TestFiles,
 		BuildFlags: buildFlags,
 	}
 	return loadPackages(cfg, paths...)
 }
 
-var generatedCodeRegexp = regexp.MustCompile("^// Code generated .* DO NOT EDIT\\.$")
+var generatedCodeRegexp = regexp.MustCompile(
+	"^// Code generated .* DO NOT EDIT\\.$",
+)
 var dotStar = regexp.MustCompile(".*")
 
-func (c *Checker) shouldSkipFile(file *ast.File) bool {
+func (c *Checker) shouldSkipFile(
+	file *ast.File,
+) bool {
 	if !c.Exclusions.GeneratedFiles {
 		return false
 	}
 
 	for _, cg := range file.Comments {
 		for _, comment := range cg.List {
-			if generatedCodeRegexp.MatchString(comment.Text) {
+			if generatedCodeRegexp.MatchString(
+				comment.Text,
+			) {
 				return true
 			}
 		}
@@ -195,27 +239,30 @@ func (c *Checker) shouldSkipFile(file *ast.File) bool {
 	return false
 }
 
-// CheckPackage checks packages for errors that have not been checked.
+// CheckPackage checks packages for errors that have not
+// been checked.
 //
-// It will exclude specific errors from analysis if the user has configured
-// exclusions.
-func (c *Checker) CheckPackage(pkg *packages.Package) Result {
+// It will exclude specific errors from analysis if the
+// user has configured exclusions.
+func (c *Checker) CheckPackage(
+	pkg *packages.Package,
+) Result {
 	excludedSymbols := map[string]bool{}
 	for _, sym := range c.Exclusions.Symbols {
 		excludedSymbols[sym] = true
 	}
 
 	ignore := map[string]*regexp.Regexp{}
-	// Apply SymbolRegexpsByPackage first so that if the same path appears in
-	// Packages, a more narrow regexp will be superseded by dotStar below.
-	if regexps := c.Exclusions.SymbolRegexpsByPackage; regexps != nil {
+	// Apply SymbolRegexpsByPackage first so that if the
+	// same path appears in Packages, a more narrow
+	// regexp will be superseded by dotStar below.
+	regexps := c.Exclusions.SymbolRegexpsByPackage
+	if regexps != nil {
 		for pkg, re := range regexps {
-			// TODO warn if previous entry overwritten?
 			ignore[nonVendoredPkgPath(pkg)] = re
 		}
 	}
 	for _, pkg := range c.Exclusions.Packages {
-		// TODO warn if previous entry overwritten?
 		ignore[nonVendoredPkgPath(pkg)] = dotStar
 	}
 
@@ -252,22 +299,28 @@ type visitor struct {
 	errors []UncheckedError
 }
 
-// selectorAndFunc tries to get the selector and function from call expression.
-// For example, given the call expression representing "a.b()", the selector
-// is "a.b" and the function is "b" itself.
+// selectorAndFunc tries to get the selector and
+// function from call expression. For example, given the
+// call expression representing "a.b()", the selector is
+// "a.b" and the function is "b" itself.
 //
-// The final return value will be true if it is able to do extract a selector
-// from the call and look up the function object it refers to.
+// The final return value will be true if it is able to
+// extract a selector from the call and look up the
+// function object it refers to.
 //
-// If the call does not include a selector (like if it is a plain "f()" function call)
-// then the final return value will be false.
-func (v *visitor) selectorAndFunc(call *ast.CallExpr) (*ast.SelectorExpr, *types.Func, bool) {
+// If the call does not include a selector (like if it
+// is a plain "f()" function call) then the final return
+// value will be false.
+func (v *visitor) selectorAndFunc(
+	call *ast.CallExpr,
+) (*ast.SelectorExpr, *types.Func, bool) {
 	sel, ok := call.Fun.(*ast.SelectorExpr)
 	if !ok {
 		return nil, nil, false
 	}
 
-	fn, ok := v.typesInfo.ObjectOf(sel.Sel).(*types.Func)
+	fn, ok :=
+		v.typesInfo.ObjectOf(sel.Sel).(*types.Func)
 	if !ok {
 		// Shouldn't happen, but be paranoid
 		return nil, nil, false
@@ -277,53 +330,71 @@ func (v *visitor) selectorAndFunc(call *ast.CallExpr) (*ast.SelectorExpr, *types
 
 }
 
-// fullName will return a package / receiver-type qualified name for a called function
-// if the function is the result of a selector. Otherwise it will return
-// the empty string.
+// fullName will return a package /
+// receiver-type qualified name for a called function
+// if the function is the result of a selector.
+// Otherwise it will return the empty string.
 //
-// The name is fully qualified by the import path, possible type,
-// function/method name and pointer receiver.
+// The name is fully qualified by the import path,
+// possible type, function/method name and pointer
+// receiver.
 //
 // For example,
-//   - for "fmt.Printf(...)" it will return "fmt.Printf"
-//   - for "base64.StdEncoding.Decode(...)" it will return "(*encoding/base64.Encoding).Decode"
+//   - for "fmt.Printf(...)" it will return
+//     "fmt.Printf"
+//   - for "base64.StdEncoding.Decode(...)" it will
+//     return "(*encoding/base64.Encoding).Decode"
 //   - for "myFunc()" it will return ""
-func (v *visitor) fullName(call *ast.CallExpr) string {
+func (v *visitor) fullName(
+	call *ast.CallExpr,
+) string {
 	_, fn, ok := v.selectorAndFunc(call)
 	if !ok {
 		return ""
 	}
 
-	// TODO(dh): vendored packages will have /vendor/ in their name,
-	// thus not matching vendored standard library packages. If we
-	// want to support vendored stdlib packages, we need to implement
+	// TODO(dh): vendored packages will have /vendor/
+	// in their name, thus not matching vendored
+	// standard library packages. If we want to support
+	// vendored stdlib packages, we need to implement
 	// FullName with our own logic.
 	return fn.FullName()
 }
 
-func getSelectorName(sel *ast.SelectorExpr) string {
+func getSelectorName(
+	sel *ast.SelectorExpr,
+) string {
 	if ident, ok := sel.X.(*ast.Ident); ok {
-		return fmt.Sprintf("%s.%s", ident.Name, sel.Sel.Name)
+		return fmt.Sprintf(
+			"%s.%s", ident.Name, sel.Sel.Name,
+		)
 	}
 	if s, ok := sel.X.(*ast.SelectorExpr); ok {
-		return fmt.Sprintf("%s.%s", getSelectorName(s), sel.Sel.Name)
+		return fmt.Sprintf(
+			"%s.%s", getSelectorName(s), sel.Sel.Name,
+		)
 	}
 
 	return ""
 }
 
-// selectorName will return a name for a called function
-// if the function is the result of a selector. Otherwise it will return
-// the empty string.
+// selectorName will return a name for a called
+// function if the function is the result of a
+// selector. Otherwise it will return the empty string.
 //
-// The name is fully qualified by the import path, possible type,
-// function/method name and pointer receiver.
+// The name is fully qualified by the import path,
+// possible type, function/method name and pointer
+// receiver.
 //
 // For example,
-//   - for "fmt.Printf(...)" it will return "fmt.Printf"
-//   - for "base64.StdEncoding.Decode(...)" it will return "base64.StdEncoding.Decode"
+//   - for "fmt.Printf(...)" it will return
+//     "fmt.Printf"
+//   - for "base64.StdEncoding.Decode(...)" it will
+//     return "base64.StdEncoding.Decode"
 //   - for "myFunc()" it will return ""
-func (v *visitor) selectorName(call *ast.CallExpr) string {
+func (v *visitor) selectorName(
+	call *ast.CallExpr,
+) string {
 	sel, _, ok := v.selectorAndFunc(call)
 	if !ok {
 		return ""
@@ -332,16 +403,21 @@ func (v *visitor) selectorName(call *ast.CallExpr) string {
 	return getSelectorName(sel)
 }
 
-// namesForExcludeCheck will return a list of fully-qualified function names
-// from a function call that can be used to check against the exclusion list.
+// namesForExcludeCheck will return a list of
+// fully-qualified function names from a function call
+// that can be used to check against the exclusion list.
 //
-// If a function call is against a local function (like "myFunc()") then no
-// names are returned. If the function is package-qualified (like "fmt.Printf()")
+// If a function call is against a local function (like
+// "myFunc()") then no names are returned. If the
+// function is package-qualified (like "fmt.Printf()")
 // then just that function's fullName is returned.
 //
-// Otherwise, we walk through all the potentially embedded interfaces of the receiver
-// to collect a list of type-qualified function names that we will check.
-func (v *visitor) namesForExcludeCheck(call *ast.CallExpr) []string {
+// Otherwise, we walk through all the potentially
+// embedded interfaces of the receiver to collect a list
+// of type-qualified function names that we will check.
+func (v *visitor) namesForExcludeCheck(
+	call *ast.CallExpr,
+) []string {
 	sel, fn, ok := v.selectorAndFunc(call)
 	if !ok {
 		return nil
@@ -352,15 +428,17 @@ func (v *visitor) namesForExcludeCheck(call *ast.CallExpr) []string {
 		return nil
 	}
 
-	// This will be missing for functions without a receiver (like fmt.Printf),
-	// so just fall back to the function's fullName in that case.
+	// This will be missing for functions without a
+	// receiver (like fmt.Printf), so just fall back to
+	// the function's fullName in that case.
 	selection, ok := v.typesInfo.Selections[sel]
 	if !ok {
 		return []string{name}
 	}
 
-	// This will return with ok false if the function isn't defined
-	// on an interface, so just fall back to the fullName.
+	// This will return with ok false if the function
+	// isn't defined on an interface, so just fall back
+	// to the fullName.
 	ts, ok := walkThroughEmbeddedInterfaces(selection)
 	if !ok {
 		return []string{name}
@@ -368,22 +446,30 @@ func (v *visitor) namesForExcludeCheck(call *ast.CallExpr) []string {
 
 	result := make([]string, len(ts))
 	for i, t := range ts {
-		// Like in fullName, vendored packages will have /vendor/ in their name,
-		// thus not matching vendored standard library packages. If we
-		// want to support vendored stdlib packages, we need to implement
-		// additional logic here.
-		result[i] = fmt.Sprintf("(%s).%s", t.String(), fn.Name())
+		// Like in fullName, vendored packages will
+		// have /vendor/ in their name, thus not
+		// matching vendored standard library packages.
+		// If we want to support vendored stdlib
+		// packages, we need to implement additional
+		// logic here.
+		result[i] = fmt.Sprintf(
+			"(%s).%s", t.String(), fn.Name(),
+		)
 	}
 	return result
 }
 
-// isBufferType checks if the expression type is a known in-memory buffer type.
+// isBufferType checks if the expression type is a
+// known in-memory buffer type.
 func (v *visitor) argName(expr ast.Expr) string {
 	// Special-case literal "os.Stdout" and "os.Stderr"
 	if sel, ok := expr.(*ast.SelectorExpr); ok {
 		if obj := v.typesInfo.ObjectOf(sel.Sel); obj != nil {
 			vr, ok := obj.(*types.Var)
-			if ok && vr.Pkg() != nil && vr.Pkg().Name() == "os" && (vr.Name() == "Stderr" || vr.Name() == "Stdout") {
+			if ok && vr.Pkg() != nil &&
+				vr.Pkg().Name() == "os" &&
+				(vr.Name() == "Stderr" ||
+					vr.Name() == "Stdout") {
 				return "os." + vr.Name()
 			}
 		}
@@ -395,7 +481,9 @@ func (v *visitor) argName(expr ast.Expr) string {
 	return t.String()
 }
 
-func (v *visitor) excludeCall(call *ast.CallExpr) bool {
+func (v *visitor) excludeCall(
+	call *ast.CallExpr,
+) bool {
 	var arg0 string
 	if len(call.Args) > 0 {
 		arg0 = v.argName(call.Args[0])
@@ -404,14 +492,17 @@ func (v *visitor) excludeCall(call *ast.CallExpr) bool {
 		if v.exclude[name] {
 			return true
 		}
-		if arg0 != "" && v.exclude[name+"("+arg0+")"] {
+		if arg0 != "" &&
+			v.exclude[name+"("+arg0+")"] {
 			return true
 		}
 	}
 	return false
 }
 
-func (v *visitor) ignoreCall(call *ast.CallExpr) bool {
+func (v *visitor) ignoreCall(
+	call *ast.CallExpr,
+) bool {
 	if v.excludeCall(call) {
 		return true
 	}
@@ -434,14 +525,17 @@ func (v *visitor) ignoreCall(call *ast.CallExpr) bool {
 		return false
 	}
 
-	// If we got an identifier for the function, see if it is ignored
-	if re, ok := v.ignore[""]; ok && re.MatchString(id.Name) {
+	// If we got an identifier for the function, see
+	// if it is ignored
+	if re, ok := v.ignore[""]; ok &&
+		re.MatchString(id.Name) {
 		return true
 	}
 
 	if obj := v.typesInfo.Uses[id]; obj != nil {
 		if pkg := obj.Pkg(); pkg != nil {
-			if re, ok := v.ignore[nonVendoredPkgPath(pkg.Path())]; ok {
+			path := nonVendoredPkgPath(pkg.Path())
+			if re, ok := v.ignore[path]; ok {
 				return re.MatchString(id.Name)
 			}
 		}
@@ -450,11 +544,14 @@ func (v *visitor) ignoreCall(call *ast.CallExpr) bool {
 	return false
 }
 
-// nonVendoredPkgPath returns the unvendored version of the provided package
-// path (or returns the provided path if it does not represent a vendored
+// nonVendoredPkgPath returns the unvendored version
+// of the provided package path (or returns the
+// provided path if it does not represent a vendored
 // path).
 func nonVendoredPkgPath(pkgPath string) string {
-	lastVendorIndex := strings.LastIndex(pkgPath, "/vendor/")
+	lastVendorIndex := strings.LastIndex(
+		pkgPath, "/vendor/",
+	)
 	if lastVendorIndex == -1 {
 		return pkgPath
 	}
@@ -463,8 +560,11 @@ func nonVendoredPkgPath(pkgPath string) string {
 
 // errorsByArg returns a slice s such that
 // len(s) == number of return types of call
-// s[i] == true iff return type at position i from left is an error type
-func (v *visitor) errorsByArg(call *ast.CallExpr) []bool {
+// s[i] == true iff return type at position i from
+// left is an error type
+func (v *visitor) errorsByArg(
+	call *ast.CallExpr,
+) []bool {
 	switch t := v.typesInfo.Types[call].Type.(type) {
 	case *types.Named:
 		// Single return
@@ -475,7 +575,7 @@ func (v *visitor) errorsByArg(call *ast.CallExpr) []bool {
 	case *types.Tuple:
 		// Multiple returns
 		s := make([]bool, t.Len())
-		for i := 0; i < t.Len(); i++ {
+		for i := range t.Len() {
 			switch et := t.At(i).Type().(type) {
 			case *types.Named:
 				// Single return
@@ -492,7 +592,9 @@ func (v *visitor) errorsByArg(call *ast.CallExpr) []bool {
 	return []bool{false}
 }
 
-func (v *visitor) callReturnsError(call *ast.CallExpr) bool {
+func (v *visitor) callReturnsError(
+	call *ast.CallExpr,
+) bool {
 	if v.isRecover(call) {
 		return true
 	}
@@ -504,26 +606,37 @@ func (v *visitor) callReturnsError(call *ast.CallExpr) bool {
 	return false
 }
 
-// isRecover returns true if the given CallExpr is a call to the built-in recover() function.
-func (v *visitor) isRecover(call *ast.CallExpr) bool {
+// isRecover returns true if the given CallExpr is a
+// call to the built-in recover() function.
+func (v *visitor) isRecover(
+	call *ast.CallExpr,
+) bool {
 	if fun, ok := call.Fun.(*ast.Ident); ok {
-		if _, ok := v.typesInfo.Uses[fun].(*types.Builtin); ok {
+		if _, ok :=
+			v.typesInfo.Uses[fun].(*types.Builtin); ok {
 			return fun.Name == "recover"
 		}
 	}
 	return false
 }
 
-// isDeferFuncLiteral returns true if the defer statement contains a function literal
-func (v *visitor) isDeferFuncLiteral(stmt *ast.DeferStmt) bool {
+// isDeferFuncLiteral returns true if the defer
+// statement contains a function literal
+func (v *visitor) isDeferFuncLiteral(
+	stmt *ast.DeferStmt,
+) bool {
 	_, ok := stmt.Call.Fun.(*ast.FuncLit)
 	return ok
 }
 
-// TODO (dtcaciuc) collect token.Pos and then convert them to UncheckedErrors
-// after visitor is done running. This will allow to integrate more cleanly
-// with analyzer so that we don't have to convert Position back to Pos.
-func (v *visitor) addErrorAtPosition(position token.Pos, call *ast.CallExpr) {
+// TODO (dtcaciuc) collect token.Pos and then convert
+// them to UncheckedErrors after visitor is done
+// running. This will allow to integrate more cleanly
+// with analyzer so that we don't have to convert
+// Position back to Pos.
+func (v *visitor) addErrorAtPosition(
+	position token.Pos, call *ast.CallExpr,
+) {
 	pos := v.fset.Position(position)
 	lines, ok := v.lines[pos.Filename]
 	if !ok {
@@ -543,7 +656,9 @@ func (v *visitor) addErrorAtPosition(position token.Pos, call *ast.CallExpr) {
 		sel = v.selectorName(call)
 	}
 
-	v.errors = append(v.errors, UncheckedError{pos, line, name, sel})
+	v.errors = append(
+		v.errors, UncheckedError{pos, line, name, sel},
+	)
 }
 
 func readfile(filename string) []string {
@@ -565,23 +680,32 @@ func (v *visitor) Visit(node ast.Node) ast.Visitor {
 	switch stmt := node.(type) {
 	case *ast.ExprStmt:
 		if call, ok := stmt.X.(*ast.CallExpr); ok {
-			if !v.ignoreCall(call) && v.callReturnsError(call) {
-				v.addErrorAtPosition(call.Lparen, call)
+			if !v.ignoreCall(call) &&
+				v.callReturnsError(call) {
+				v.addErrorAtPosition(
+					call.Lparen, call,
+				)
 			}
 		}
 	case *ast.GoStmt:
-		if !v.ignoreCall(stmt.Call) && v.callReturnsError(stmt.Call) {
-			v.addErrorAtPosition(stmt.Call.Lparen, stmt.Call)
+		if !v.ignoreCall(stmt.Call) &&
+			v.callReturnsError(stmt.Call) {
+			v.addErrorAtPosition(
+				stmt.Call.Lparen, stmt.Call,
+			)
 		}
 	case *ast.DeferStmt:
-		// Ignore errors from defer statements that are not function literals
-		// as these are often handled on a best-effort basis
+		// Ignore errors from defer statements that are
+		// not function literals as these are often
+		// handled on a best-effort basis
 		if !v.isDeferFuncLiteral(stmt) {
-			// Skip error checking for non-function-literal defer statements
 			return v
 		}
-		if !v.ignoreCall(stmt.Call) && v.callReturnsError(stmt.Call) {
-			v.addErrorAtPosition(stmt.Call.Lparen, stmt.Call)
+		if !v.ignoreCall(stmt.Call) &&
+			v.callReturnsError(stmt.Call) {
+			v.addErrorAtPosition(
+				stmt.Call.Lparen, stmt.Call,
+			)
 		}
 	case *ast.GenDecl:
 		if stmt.Tok != token.VAR {
@@ -600,14 +724,18 @@ func (v *visitor) Visit(node ast.Node) ast.Visitor {
 			for _, name := range vspec.Names {
 				lhs = append(lhs, ast.Expr(name))
 			}
-			followed := v.checkAssignment(lhs, vspec.Values)
+			followed := v.checkAssignment(
+				lhs, vspec.Values,
+			)
 			if !followed {
 				return nil
 			}
 		}
 
 	case *ast.AssignStmt:
-		followed := v.checkAssignment(stmt.Lhs, stmt.Rhs)
+		followed := v.checkAssignment(
+			stmt.Lhs, stmt.Rhs,
+		)
 		if !followed {
 			return nil
 		}
@@ -621,11 +749,16 @@ func (v *visitor) Visit(node ast.Node) ast.Visitor {
 	return v
 }
 
-// checkAssignment checks the assignment statement and returns a boolean value
-// indicating whether to continue checking the substructure in AssignStmt or not
-func (v *visitor) checkAssignment(lhs, rhs []ast.Expr) (followed bool) {
+// checkAssignment checks the assignment statement and
+// returns a boolean value indicating whether to
+// continue checking the substructure in AssignStmt
+// or not
+func (v *visitor) checkAssignment(
+	lhs, rhs []ast.Expr,
+) (followed bool) {
 	if len(rhs) == 1 {
-		// single value on rhs; check against lhs identifiers
+		// single value on rhs; check against lhs
+		// identifiers
 		if call, ok := rhs[0].(*ast.CallExpr); ok {
 			if !v.blank {
 				return true
@@ -634,16 +767,23 @@ func (v *visitor) checkAssignment(lhs, rhs []ast.Expr) (followed bool) {
 				return true
 			}
 			isError := v.errorsByArg(call)
-			for i := 0; i < len(lhs); i++ {
+			for i := range lhs {
 				if id, ok := lhs[i].(*ast.Ident); ok {
-					// We shortcut calls to recover() because errorsByArg can't
-					// check its return types for errors since it returns interface{}.
-					if id.Name == "_" && (v.isRecover(call) || isError[i]) {
-						v.addErrorAtPosition(id.NamePos, call)
+					// We shortcut calls to recover()
+					// because errorsByArg can't check
+					// its return types for errors
+					// since it returns interface{}.
+					if id.Name == "_" &&
+						(v.isRecover(call) ||
+							isError[i]) {
+						v.addErrorAtPosition(
+							id.NamePos, call,
+						)
 					}
 				}
 			}
-		} else if assert, ok := rhs[0].(*ast.TypeAssertExpr); ok {
+		} else if assert, ok :=
+			rhs[0].(*ast.TypeAssertExpr); ok {
 			if !v.asserts {
 				return false
 			}
@@ -653,37 +793,53 @@ func (v *visitor) checkAssignment(lhs, rhs []ast.Expr) (followed bool) {
 			}
 			if len(lhs) < 2 {
 				// assertion result not read
-				v.addErrorAtPosition(rhs[0].Pos(), nil)
-			} else if id, ok := lhs[1].(*ast.Ident); ok && v.blank && id.Name == "_" {
+				v.addErrorAtPosition(
+					rhs[0].Pos(), nil,
+				)
+			} else if id, ok :=
+				lhs[1].(*ast.Ident); ok &&
+				v.blank && id.Name == "_" {
 				// assertion result ignored
-				v.addErrorAtPosition(id.NamePos, nil)
+				v.addErrorAtPosition(
+					id.NamePos, nil,
+				)
 			}
 			return false
 		}
 	} else {
-		// multiple value on rhs; in this case a call can't return
-		// multiple values. Assume len(lhs) == len(rhs)
-		for i := 0; i < len(lhs); i++ {
+		// multiple value on rhs; in this case a call
+		// can't return multiple values.
+		// Assume len(lhs) == len(rhs)
+		for i := range lhs {
 			if id, ok := lhs[i].(*ast.Ident); ok {
-				if call, ok := rhs[i].(*ast.CallExpr); ok {
+				if call, ok :=
+					rhs[i].(*ast.CallExpr); ok {
 					if !v.blank {
 						continue
 					}
 					if v.ignoreCall(call) {
 						continue
 					}
-					if id.Name == "_" && v.callReturnsError(call) {
-						v.addErrorAtPosition(id.NamePos, call)
+					if id.Name == "_" &&
+						v.callReturnsError(call) {
+						v.addErrorAtPosition(
+							id.NamePos, call,
+						)
 					}
-				} else if assert, ok := rhs[i].(*ast.TypeAssertExpr); ok {
+				} else if assert, ok :=
+					rhs[i].(*ast.TypeAssertExpr); ok {
 					if !v.asserts {
 						continue
 					}
 					if assert.Type == nil {
-						// Shouldn't happen anyway, no multi assignment in type switches
+						// Shouldn't happen anyway,
+						// no multi assignment in
+						// type switches
 						continue
 					}
-					v.addErrorAtPosition(id.NamePos, nil)
+					v.addErrorAtPosition(
+						id.NamePos, nil,
+					)
 				}
 			}
 		}
@@ -692,7 +848,9 @@ func (v *visitor) checkAssignment(lhs, rhs []ast.Expr) (followed bool) {
 	return true
 }
 
-func (v *visitor) checkAssertExpr(expr *ast.TypeAssertExpr) {
+func (v *visitor) checkAssertExpr(
+	expr *ast.TypeAssertExpr,
+) {
 	if !v.asserts {
 		return
 	}

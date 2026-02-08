@@ -24,13 +24,26 @@ var (
 )
 
 func init() {
-	Analyzer.Flags.BoolVar(&argBlank, "blank", false, "if true, check for errors assigned to blank identifier")
-	Analyzer.Flags.BoolVar(&argAsserts, "assert", false, "if true, check for ignored type assertion results")
-	Analyzer.Flags.StringVar(&argExcludeFile, "exclude", "", "Path to a file containing a list of functions to exclude from checking")
-	Analyzer.Flags.BoolVar(&argExcludeOnly, "excludeonly", false, "Use only excludes from exclude file")
+	Analyzer.Flags.BoolVar(
+		&argBlank, "blank", false,
+		"if true, check for errors assigned to blank identifier",
+	)
+	Analyzer.Flags.BoolVar(
+		&argAsserts, "assert", false,
+		"if true, check for ignored type assertion results",
+	)
+	Analyzer.Flags.StringVar(
+		&argExcludeFile, "exclude", "",
+		"Path to a file containing a list of functions "+
+			"to exclude from checking",
+	)
+	Analyzer.Flags.BoolVar(
+		&argExcludeOnly, "excludeonly", false,
+		"Use only excludes from exclude file",
+	)
 }
 
-func runAnalyzer(pass *analysis.Pass) (interface{}, error) {
+func runAnalyzer(pass *analysis.Pass) (any, error) {
 	exclude := map[string]bool{}
 	if !argExcludeOnly {
 		for _, name := range DefaultExcludedSymbols {
@@ -40,7 +53,9 @@ func runAnalyzer(pass *analysis.Pass) (interface{}, error) {
 	if argExcludeFile != "" {
 		excludes, err := ReadExcludes(argExcludeFile)
 		if err != nil {
-			return nil, fmt.Errorf("Could not read exclude file: %v\n", err)
+			return nil, fmt.Errorf(
+				"Could not read exclude file: %v\n", err,
+			)
 		}
 		for _, name := range excludes {
 			exclude[name] = true
@@ -55,7 +70,7 @@ func runAnalyzer(pass *analysis.Pass) (interface{}, error) {
 			blank:     argBlank,
 			asserts:   argAsserts,
 			exclude:   exclude,
-			ignore:    map[string]*regexp.Regexp{}, // deprecated & not used
+			ignore:    map[string]*regexp.Regexp{},
 			lines:     make(map[string][]string),
 			errors:    nil,
 		}
@@ -64,7 +79,9 @@ func runAnalyzer(pass *analysis.Pass) (interface{}, error) {
 
 		for _, err := range v.errors {
 			pass.Report(analysis.Diagnostic{
-				Pos:      pass.Fset.File(f.Pos()).Pos(err.Pos.Offset),
+				Pos: pass.Fset.File(f.Pos()).Pos(
+					err.Pos.Offset,
+				),
 				Message:  "unchecked error",
 				Category: "errcheck",
 			})
